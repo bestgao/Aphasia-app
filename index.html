@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>失语者沟通助手</title>
-    <link rel="manifest" href="/Aphasia-app/assets/manifest-C79ea8-P.json" />
+
+<link rel="manifest" href="/Aphasia-app/manifest.json" />
+
     <meta name="theme-color" content="#2563eb" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,13 +37,15 @@
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js')
+navigator.serviceWorker.register('/Aphasia-app/sw.js')
         .then(reg => console.log('SW registered'))
         .catch(err => console.log('SW failed', err));
     });
   }
 </script>
-<link rel="stylesheet" href="/index.css">
+
+<link rel="stylesheet" href="/Aphasia-app/index.css" />
+
   <script type="importmap">
 {
   "imports": {
@@ -52,9 +56,47 @@
   }
 }
 </script>
-  <script type="module" crossorigin src="/Aphasia-app/assets/index-DVDllPzb.js"></script>
+  <script type="module" crossorigin src="/Aphasia-app/assets/index-CGZkT0Uu.js"></script>
 </head>
+
   <body class="bg-slate-50 text-slate-900 h-screen w-screen overflow-hidden">
     <div id="root" class="h-full w-full"></div>
-</body>
+
+    <!-- ✅ 全局按钮发声逻辑：所有 button 点一下就说话 -->
+    <script>
+      function speak(text, lang = 'zh-CN') {
+        if (!('speechSynthesis' in window)) {
+          console.warn('当前浏览器不支持语音合成');
+          return;
+        }
+
+        if (!text || !text.trim()) return;
+
+        const utter = new SpeechSynthesisUtterance(text.trim());
+        utter.lang = lang;   // 中文用 zh-CN，如需英文可改成 en-US
+        utter.rate = 1;      // 语速
+        utter.pitch = 1;     // 音调
+
+        // 避免排队太多句子
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utter);
+      }
+
+      // 事件委托：页面上任何 button 被点击都会触发
+      document.addEventListener('click', function (e) {
+        const target = e.target;
+        if (!target) return;
+
+        // 找到最近的 button（兼容内部有 span、div 等情况）
+        const btn = target.closest && target.closest('button');
+        if (!btn) return;
+
+        // 优先读 data-say，没有就读按钮文字
+        const text = btn.getAttribute('data-say') || btn.innerText;
+        const lang = btn.getAttribute('data-lang') || 'zh-CN';
+
+        speak(text, lang);
+      });
+    </script>
+  </body>
 </html>
